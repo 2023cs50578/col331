@@ -1,23 +1,23 @@
 ## Programmable Interrupt Controller (PIC)
 
-Original design of PIC (8259A) had dedicated pins for receiving interrupts from
+The original design of the PIC (8259A) had dedicated pins for receiving interrupts from
 different devices. One PIC could get 8 interrupts corresponding to 8 pins.  They
 were connected in a primary-secondary fashion where the secondary PIC is
 attached to the primary PIC's pin 2 and the primary PIC is attached directly to
-the CPU. These interrupt pins were labelled IRQ0 to IRQ7 for primary, and IRQ8 to
+the CPU. These interrupt pins were labelled IRQ0 to IRQ7 for the primary, and IRQ8 to
 IRQ15 for the secondary. In total, we can effectively get 15 (16 minus primary's
 pin 2) interrupt pins.
 
-By a matter of convention, timer is attached on IRQ0, keyboard on IRQ1,
+As a matter of convention, timer is attached on IRQ0, keyboard on IRQ1,
 real-time clock on IRQ8, mouse on IRQ12, IDE controller on IRQ14, etc. Some of
 these IRQs are defined in `traps.h`. However, since there were only 15 pins,
 some devices started sharing the pins which created complications in managing
 the interrupts. Moreover, PICs did not have support for multi-core processors.
-Therefore, Intel introduced advanced programmable interrupt controller (APICs).
+Therefore, Intel introduced advanced programmable interrupt controllers (APICs).
 After boot, `main.c` calls `picinit` in `picirq.c` which disables PICs in favor
 of using APICs.
 
-## Advanced programmable interrupt controller (APIC)
+## Advanced Programmable Interrupt Controller (APIC)
 
 To support multi-core processors, there is now a local APIC for each core, that
 can be independently interrupted, such as timer interrupts, and a common IO APIC
@@ -31,7 +31,7 @@ acknowledges any outstanding interrupts by resetting end of interrupt (EOI), and
 enables all external interrupts by setting task priority register (TPR) to 0.
 For example, TPR=8 would have blocked interrupts with priority class < 9.
 Section 10.8.3 Intel SDM Volume 3, Part 1 discusses interrupt priorities. Note
-that this does not enable interrupts at CPU. You can [read
+that this does not enable interrupts at the CPU. You can [read
 here](https://wiki.osdev.org/APIC_Timer#Periodic_Mode) about how the timer
 interrupt period is decided from LAPIC registers.
 

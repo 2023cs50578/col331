@@ -9,7 +9,7 @@ halt(void)
 {
   cprintf("Bye COL%d!\n\0", 331);
   outw(0x604, 0x2000);
-  // For older versions of QEMU, 
+  // For older versions of QEMU, use port 0xB004.
   outw(0xB004, 0x2000);
 }
 
