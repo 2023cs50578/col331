@@ -2,12 +2,10 @@
 #include "defs.h"
 #include "x86.h"
 
-extern char end[]; // first address after kernel loaded from ELF file
-
 void
 halt(void)
 {
-  cprintf("Bye COL%d!\n\0", 331);
+  cprintf("Bye COL%d!\n", 331);
   outw(0x604, 0x2000);
   // For older versions of QEMU, use port 0xB004.
   outw(0xB004, 0x2000);
@@ -25,6 +23,6 @@ main(void)
   picinit();       // disable pic
   ioapicinit();    // another interrupt controller
   uartinit();      // serial port
-  cprintf("Finished setting up PICs!\n\0");
+  cprintf("Finished setting up PICs!\n");
   halt();
 }
