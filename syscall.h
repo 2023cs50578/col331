@@ -4,3 +4,5 @@
 #define SYS_close   3
 #define SYS_exec    4
 #define SYS_uptime  5
+#define SYS_sleep   6
+#define SYS_mknod   7

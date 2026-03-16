@@ -5,6 +5,7 @@ struct inode;
 struct stat;
 struct context;
 struct proc;
+struct spinlock;
 
 // bio.c
 void            binit(void);
@@ -99,10 +100,11 @@ struct proc*    myproc();
 void            scheduler(void) __attribute__((noreturn));
 void            procdump(void);
 void            yield(void);
-void             forkret(void);
+void            forkret(void);
+void            sleep(void*);
+void            wakeup(void*);
 
 // spinlock.c
-struct spinlock; 
 void            getcallerpcs(void*, uint*);
 void            pushcli(void);
 void            popcli(void);

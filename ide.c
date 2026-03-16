@@ -113,6 +113,7 @@ ideintr(void)
 
   b->flags |= B_VALID;
   b->flags &= ~B_DIRTY;
+  wakeup(b);
 
   // Start disk on next buf in queue.
   if(idequeue != 0)
@@ -146,11 +147,7 @@ iderw(struct buf *b)
   release(&idelock);
 
   // Wait for request to finish.
-  while((b->flags & (B_VALID|B_DIRTY)) != B_VALID)
-  {
-    // Warning: If we do not call noop(), compiler generates code that does not
-    // read "b->flags" again and therefore never come out of this while loop. 
-    // "b->flags" is modified by the trap handler in ideintr().  
-    noop();
+  while((b->flags & (B_VALID|B_DIRTY)) != B_VALID) {
+    sleep(b);
   }
 }

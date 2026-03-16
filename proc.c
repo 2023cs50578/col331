@@ -193,10 +193,71 @@ yield(void)
   release(&ptable.lock);
 }
 
+// A fork child's very first scheduling by scheduler()
+// will swtch here.  "Return" to user space.
 void
 forkret(void)
 {
-  // Release the lock held by the scheduler
+  static int first = 1;
+  // Still holding ptable.lock from scheduler.
+  release(&ptable.lock);
+
+  if (first) {
+    // Some initialization functions must be run in the context
+    // of a regular process (e.g., they call sleep), and thus cannot
+    // be run from main().
+    first = 0;
+    iinit(ROOTDEV);
+    initlog(ROOTDEV);
+  }
+
+  // Return to "caller", actually trapret (see allocproc).
+}
+
+
+// Atomically release lock and sleep on chan.
+// Reacquires lock when awakened.
+void
+sleep(void *chan)
+{
+  struct proc *p = myproc();
+
+  if(p == 0)
+    panic("sleep");
+
+  // Must acquire ptable.lock in order to
+  // change p->state and then call sched.
+  acquire(&ptable.lock);
+  // Go to sleep.
+  p->chan = chan;
+  p->state = SLEEPING;
+
+  sched();
+
+  // Tidy up.
+  p->chan = 0;
+
+  release(&ptable.lock);
+}
+
+// Wake up all processes sleeping on chan.
+// The ptable lock must be held.
+static void
+wakeup1(void *chan)
+{
+  struct proc *p;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state == SLEEPING && p->chan == chan)
+      p->state = RUNNABLE;
+}
+
+// Wake up all processes sleeping on chan.
+void
+wakeup(void *chan)
+{
+  acquire(&ptable.lock);
+  wakeup1(chan);
   release(&ptable.lock);
 }
 
@@ -206,6 +267,7 @@ procdump(void)
   static char *states[] = {
   [UNUSED]    "unused",
   [EMBRYO]    "embryo",
+  [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
   };

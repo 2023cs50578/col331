@@ -39,6 +39,7 @@ trap(struct trapframe *tf)
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     ticks++;
+    wakeup(&ticks);
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
