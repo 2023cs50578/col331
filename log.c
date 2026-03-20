@@ -37,7 +37,6 @@ struct logheader {
 };
 
 struct log {
- 
   int start;
   int size;
   int outstanding; // how many FS sys calls are executing.
@@ -55,7 +54,6 @@ initlog(int dev)
 {
   if (sizeof(struct logheader) >= BSIZE)
     panic("initlog: too big logheader");
-
 
   struct superblock sb;
   readsb(dev, &sb);
@@ -216,7 +214,7 @@ void
 log_write(struct buf *b)
 {
   int i;
-
+  pushcli();
   if (log.lh.n >= LOGSIZE || log.lh.n >= log.size - 1)
     panic("too big a transaction");
   if (log.outstanding < 1)
@@ -224,7 +222,7 @@ log_write(struct buf *b)
 
   pushcli();
   for (i = 0; i < log.lh.n; i++) {
-    if (log.lh.block[i] == b->blockno)   // log absorbtion
+    if (log.lh.block[i] == b->blockno)   // log absorption
       break;
   }
   log.lh.block[i] = b->blockno;
@@ -233,4 +231,3 @@ log_write(struct buf *b)
   b->flags |= B_DIRTY; // prevent eviction
   popcli();
 }
-
