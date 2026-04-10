@@ -92,6 +92,7 @@ extern int sys_uptime(void);
 extern int sys_sleep(void);
 extern int sys_getpid(void);
 extern int sys_mknod(void);
+extern int sys_fork(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -102,6 +103,7 @@ static int (*syscalls[])(void) = {
 [SYS_sleep]   sys_sleep,
 [SYS_getpid]  sys_getpid,
 [SYS_mknod]   sys_mknod,
+[SYS_fork]    sys_fork,
 };
 
 void
@@ -118,4 +120,10 @@ syscall(void)
             curproc->pid, curproc->name, num);
     curproc->tf->eax = -1;
   }
+}
+
+int
+sys_fork(void)
+{
+  return fork();
 }

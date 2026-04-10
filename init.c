@@ -5,16 +5,27 @@
 #include "fcntl.h"
 
 int
-main(int argc, char *argv[])
+main(void)
 {
-  if(open("console", O_RDWR) < 0){
+  int fd;
+
+  // Open (or create) the console device as fd 0
+  if((fd = open("console", O_RDWR)) < 0){
     mknod("console", 1, 1);
-    open("console", O_RDWR);
+    fd = open("console", O_RDWR);
   }
-  printf(0, "Hello %s from init.c\n", argv[0]);
-  while(1) {
-    int t = uptime();
-    printf(0, "It's %d ticks since start.\n", t);
-    sleep(100);
+
+  printf(fd, "Hello COL331 from init.c!\n");
+
+  int pid = fork();
+  
+  if(pid < 0){
+    printf(fd, "Fork failed!\n");
+  } else if(pid == 0){
+    printf(fd, "I am the child process!\n");
+    for(;;); // Keep child alive
+  } else {
+    printf(fd, "I am the parent, my child's PID is %d\n", pid);
+    for(;;); // Keep parent alive
   }
 }

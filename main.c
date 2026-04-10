@@ -5,12 +5,10 @@
 #include "fs.h"
 #include "buf.h"
 #include "param.h"
-#include "stat.h"
-#include "file.h"
-#include "fcntl.h"
 #include "mmu.h"
 #include "proc.h"
 #include "memlayout.h"
+
 
 extern char end[]; // first address after kernel loaded from ELF file
 

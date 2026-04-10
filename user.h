@@ -7,5 +7,7 @@ int uptime(void);
 int sleep(int);
 int getpid(void);
 int mknod(const char*, short, short);
+int fork(void);
 
+// ulib.c
 void printf(int, const char*, ...);
