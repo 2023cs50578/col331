@@ -133,7 +133,8 @@ _%: %.o $(ULIB)
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
 UPROGS=\
-	_init
+	_init\
+	_sh
 
 mkfs: mkfs.c fs.h
 	gcc -Werror -Wall -o mkfs mkfs.c

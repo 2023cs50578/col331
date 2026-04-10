@@ -64,6 +64,7 @@ sys_read(void)
   return fileread(f, p, n);
 }
 
+// In sysfile.c
 int
 sys_write(void)
 {
@@ -71,7 +72,8 @@ sys_write(void)
   int n;
   char *p;
 
-  if((argfd(0, 0, &f) < 0) || (argstr(1, &p)) < 0 || (argint(2, &n)) < 0) {
+  // Change argstr(1, &p) to argptr(1, &p, n)
+  if((argfd(0, 0, &f) < 0) || (argint(2, &n)) < 0 || (argptr(1, &p, n)) < 0) {
     return -1;
   }
   return filewrite(f, p, n);

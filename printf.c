@@ -8,6 +8,32 @@ putc(int fd, char c)
   write(fd, &c, 1);
 }
 
+char*
+gets(char *buf, int max)
+{
+  int i, cc;
+  char c;
+
+  for(i=0; i+1 < max; ){
+    cc = read(0, &c, 1);
+    if(cc < 1)
+      break;
+    buf[i++] = c;
+    if(c == '\n' || c == '\r')
+      break;
+  }
+  buf[i] = '\0';
+  return buf;
+}
+
+int
+strcmp(const char *p, const char *q)
+{
+  while(*p && *p == *q)
+    p++, q++;
+  return (uchar)*p - (uchar)*q;
+}
+
 static void
 printint(int fd, int xx, int base, int sgn)
 {

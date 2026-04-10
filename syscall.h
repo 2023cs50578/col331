@@ -11,3 +11,4 @@
 #define SYS_wait    10
 #define SYS_exit    11
 #define SYS_kill    12
+#define SYS_read    13

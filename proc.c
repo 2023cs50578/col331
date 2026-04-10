@@ -123,7 +123,7 @@ pinit(void)
   p->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
-  p->cwd = namei("/");
+  // cwd is set in forkret, after iinit has initialized the inode cache.
 
   p->state = RUNNABLE;
 }
@@ -371,6 +371,7 @@ forkret(void)
     first = 0;
     iinit(ROOTDEV);
     initlog(ROOTDEV);
+    myproc()->cwd = namei("/");
   }
 
   // Return to "caller", actually trapret (see allocproc).

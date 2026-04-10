@@ -4,29 +4,37 @@
 #include "user.h"
 #include "fcntl.h"
 
+static char *argv[] = { "sh", 0 };
+
 int
 main(void)
 {
-  int fd;
+  int pid, wpid;
 
-  // Open (or create) the console device as fd 0
-  if((fd = open("console", O_RDWR)) < 0){
+  if(open("console", O_RDWR) < 0){
     mknod("console", 1, 1);
-    fd = open("console", O_RDWR);
+    open("console", O_RDWR);
   }
 
-  printf(fd, "My PID is: %d\n", getpid());
+  // dup(0); // Set up stdout (fd 1)
+  // dup(0); // Set up stderr (fd 2)
 
-  int pid = fork();
-  
-  if(pid == 0){
-    printf(fd, "Child (PID %d) looping forever...\n", getpid());
-    for(;;); 
-  } else {
-    printf(fd, "Parent waiting briefly, then killing child...\n");
-    kill(pid);
-    wait();
-    printf(fd, "Child killed and reaped. Test passed!\n");
-    for(;;);
+  open("console", O_RDWR); // Sets up stdout (fd 1)
+  open("console", O_RDWR); // Sets up stderr (fd 2)
+
+  for(;;){
+    printf(1, "init: starting sh\n");
+    pid = fork();
+    if(pid < 0){
+      printf(1, "init: fork failed\n");
+      exit();
+    }
+    if(pid == 0){
+      exec("sh", argv);
+      printf(1, "init: exec sh failed\n");
+      exit();
+    }
+    while((wpid = wait()) >= 0 && wpid != pid)
+      printf(1, "zombie!\n");
   }
 }

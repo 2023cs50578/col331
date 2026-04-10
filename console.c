@@ -164,6 +164,7 @@ consoleintr(int (*getc)(void))
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           // call myproc with the buf
           input.w = input.e;
+          wakeup(&input.r); // <--- Add this line to wake up consoleread
         }
       }
       break;
@@ -183,7 +184,9 @@ consoleread(struct inode *ip, char *dst, int n)
 
   target = n;
   while(n > 0){
-    while(input.r == input.w);
+    while(input.r == input.w) {
+        yield();
+    }
     c = input.buf[input.r++ % INPUT_BUF];
     if(c == C('D')){  // EOF
       if(n < target){
@@ -218,4 +221,6 @@ consoleinit(void)
 {
   devsw[CONSOLE].write = consolewrite;
   devsw[CONSOLE].read = consoleread;
+
+  ioapicenable(IRQ_KBD, 0);
 }

@@ -61,12 +61,14 @@ argptr(int n, char **pp, int size)
 {
   int i;
   struct proc *curproc = myproc();
- 
+
   if(argint(n, &i) < 0)
     return -1;
-  if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+  if((uint)i >= curproc->sz || (uint)i+size > curproc->sz)
     return -1;
-  *pp = (char*)i;
+    
+  // You must add curproc->offset here so it reads the correct memory!
+  *pp = (char*)(i + curproc->offset); 
   return 0;
 }
 
@@ -96,6 +98,7 @@ extern int sys_fork(void);
 extern int sys_wait(void);
 extern int sys_exit(void);
 extern int sys_kill(void);
+extern int sys_read(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -110,6 +113,7 @@ static int (*syscalls[])(void) = {
 [SYS_wait]    sys_wait,
 [SYS_exit]    sys_exit,
 [SYS_kill]    sys_kill,
+[SYS_read]    sys_read,
 };
 
 void
