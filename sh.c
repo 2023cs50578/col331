@@ -87,6 +87,50 @@ main(void)
     if(bad || n == 0)
       continue;
 
+    int pipe_idx = -1;
+    for(int i = 0; i < n; i++){
+      if(argv[i][0] == '|' && argv[i][1] == '\0'){
+        pipe_idx = i;
+        break;
+      }
+    }
+
+    if(pipe_idx >= 0){
+      argv[pipe_idx] = 0; // Split into left and right command arrays
+      int p[2];
+      if(pipe(p) < 0) {
+        printf(2, "pipe failed\n");
+        continue;
+      }
+      
+      if(fork() == 0){ // Left Child
+        close(1);
+        dup(p[1]);   // Swap standard output to pipe write end
+        close(p[0]);
+        close(p[1]);
+        exec(argv[0], argv);
+        printf(2, "exec %s failed\n", argv[0]);
+        exit();
+      }
+      if(fork() == 0){ // Right Child
+        close(0);
+        dup(p[0]);   // Swap standard input to pipe read end
+        close(p[0]);
+        close(p[1]);
+        char **right_argv = &argv[pipe_idx + 1];
+        exec(right_argv[0], right_argv);
+        printf(2, "exec %s failed\n", right_argv[0]);
+        exit();
+      }
+      
+      // Parent must close its copy of the pipe descriptors
+      close(p[0]);
+      close(p[1]);
+      wait();
+      wait();
+      continue; // Skip the normal single-command execution block
+    }
+
     if(fork() == 0){
       if(redir_in){
         close(0);

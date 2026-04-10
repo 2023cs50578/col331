@@ -229,3 +229,47 @@ sys_mknod(void)
   end_op();
   return 0;
 }
+
+int
+sys_pipe(void)
+{
+  int *fd;
+  struct file *rf, *wf;
+  int fd0, fd1;
+
+  if(argptr(0, (char**)&fd, 2*sizeof(fd[0])) < 0)
+    return -1;
+  if(pipealloc(&rf, &wf) < 0)
+    return -1;
+  fd0 = -1;
+  if((fd0 = fdalloc(rf)) < 0 || (fd1 = fdalloc(wf)) < 0){
+    if(fd0 >= 0)
+      myproc()->ofile[fd0] = 0;
+    fileclose(rf);
+    fileclose(wf);
+    return -1;
+  }
+  fd[0] = fd0;
+  fd[1] = fd1;
+  return 0;
+}
+
+int
+sys_dup(void)
+{
+  struct file *f;
+  int fd;
+
+  // Fetch the file descriptor from the user argument
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+    
+  // Allocate a new file descriptor (it grabs the lowest available)
+  if((fd = fdalloc(f)) < 0)
+    return -1;
+    
+  // Increment the file's reference count
+  filedup(f);
+  
+  return fd;
+}

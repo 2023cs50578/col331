@@ -12,3 +12,5 @@
 #define SYS_exit    11
 #define SYS_kill    12
 #define SYS_read    13
+#define SYS_pipe    14
+#define SYS_dup     15

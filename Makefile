@@ -25,6 +25,7 @@ OBJS = \
 	sysfile.o\
 	exec.o\
 	sysproc.o\
+	pipe.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
