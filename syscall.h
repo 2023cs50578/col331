@@ -10,3 +10,4 @@
 #define SYS_fork    9
 #define SYS_wait    10
 #define SYS_exit    11
+#define SYS_kill    12

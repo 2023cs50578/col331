@@ -10,6 +10,7 @@ int mknod(const char*, short, short);
 int fork(void);
 int wait(void);
 int exit(void) __attribute__((noreturn));
+int kill(int);
 
 // ulib.c
 void printf(int, const char*, ...);

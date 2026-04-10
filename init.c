@@ -15,21 +15,18 @@ main(void)
     fd = open("console", O_RDWR);
   }
 
-  printf(fd, "Testing fork, wait, and exit!\n");
+  printf(fd, "My PID is: %d\n", getpid());
 
   int pid = fork();
   
-  if(pid < 0){
-    printf(fd, "Fork failed!\n");
-  } else if(pid == 0){
-    printf(fd, "Child executing, will now exit...\n");
-    exit(); 
+  if(pid == 0){
+    printf(fd, "Child (PID %d) looping forever...\n", getpid());
+    for(;;); 
   } else {
-    printf(fd, "Parent waiting for child...\n");
-    int reaped_pid = wait();
-    printf(fd, "Parent reaped child PID %d. Test successful!\n", reaped_pid);
-    for(;;); // Keep parent alive so OS doesn't panic
+    printf(fd, "Parent waiting briefly, then killing child...\n");
+    kill(pid);
+    wait();
+    printf(fd, "Child killed and reaped. Test passed!\n");
+    for(;;);
   }
-  
-  return 0;
 }

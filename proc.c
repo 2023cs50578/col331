@@ -323,7 +323,7 @@ wait(void)
     }
 
     // No point waiting if we don't have any children.
-    if(!havekids){
+    if(!havekids || curproc->killed){
       popcli();
       return -1;
     }
@@ -331,6 +331,29 @@ wait(void)
     // Wait for children to exit. (Sleep on our own proc structure)
     sleep(curproc);
   }
+}
+
+// Kill the process with the given pid.
+// Process won't exit until it returns
+// to user space (see trap in trap.c).
+int
+kill(int pid)
+{
+  struct proc *p;
+
+  pushcli();
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      p->killed = 1;
+      // Wake process from sleep if necessary.
+      if(p->state == SLEEPING)
+        p->state = RUNNABLE;
+      popcli();
+      return 0;
+    }
+  }
+  popcli();
+  return -1;
 }
 
 

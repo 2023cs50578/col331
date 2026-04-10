@@ -95,6 +95,7 @@ extern int sys_mknod(void);
 extern int sys_fork(void);
 extern int sys_wait(void);
 extern int sys_exit(void);
+extern int sys_kill(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -108,6 +109,7 @@ static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_wait]    sys_wait,
 [SYS_exit]    sys_exit,
+[SYS_kill]    sys_kill,
 };
 
 void
@@ -143,4 +145,14 @@ sys_exit(void)
 {
   exit();
   return 0;  // Not reached
+}
+
+int
+sys_kill(void)
+{
+  int pid;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  return kill(pid);
 }

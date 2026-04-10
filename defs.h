@@ -99,6 +99,7 @@ int             cpuid(void);
 int             fork(void);
 void            exit(void);
 int             wait(void);
+int             kill(int);
 void            pinit(void);
 struct cpu*     mycpu(void);
 struct proc*    myproc();
