@@ -18,6 +18,8 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void trapret(void);
 
+static void wakeup1(void *chan);
+
 int
 cpuid() {
   return 0;
@@ -241,8 +243,97 @@ fork(void)
   return pid;
 }
 
-// A fork child's very first scheduling by scheduler()
-// will swtch here.  "Return" to user space.
+// Exit the current process.  Does not return.
+// An exited process remains in the zombie state
+// until its parent calls wait() to find out it exited.
+void
+exit(void)
+{
+  struct proc *curproc = myproc();
+  struct proc *p;
+  int fd;
+
+  if(curproc == initproc)
+    panic("init exiting");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
+      fileclose(curproc->ofile[fd]);
+      curproc->ofile[fd] = 0;
+    }
+  }
+
+  // Release the current working directory
+  begin_op();
+  iput(curproc->cwd);
+  end_op();
+  curproc->cwd = 0;
+
+  pushcli();
+
+  // Wake up the parent, who might be sleeping in wait().
+  wakeup1(curproc->parent);
+
+  // Pass any abandoned children to initproc.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+
+  // Jump into the scheduler, never to return.
+  curproc->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
+
+// Wait for a child process to exit and return its pid.
+// Return -1 if this process has no children.
+int
+wait(void)
+{
+  struct proc *p;
+  int havekids, pid;
+  struct proc *curproc = myproc();
+
+  pushcli();
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc)
+        continue;
+      havekids = 1;
+      
+      // If we find a ZOMBIE child, clean up its memory!
+      if(p->state == ZOMBIE){
+        pid = p->pid;
+        kfree(p->offset); // Free the 1MB physical block
+        p->offset = 0;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->state = UNUSED;
+        popcli();
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids){
+      popcli();
+      return -1;
+    }
+
+    // Wait for children to exit. (Sleep on our own proc structure)
+    sleep(curproc);
+  }
+}
+
+
 void
 forkret(void)
 {
@@ -315,6 +406,7 @@ procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
+  [ZOMBIE]    "zombie",
   };
   struct proc *p;
   char *state;

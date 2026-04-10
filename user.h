@@ -8,6 +8,8 @@ int sleep(int);
 int getpid(void);
 int mknod(const char*, short, short);
 int fork(void);
+int wait(void);
+int exit(void) __attribute__((noreturn));
 
 // ulib.c
 void printf(int, const char*, ...);

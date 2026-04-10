@@ -97,6 +97,8 @@ void            picinit(void);
 // proc.c
 int             cpuid(void);
 int             fork(void);
+void            exit(void);
+int             wait(void);
 void            pinit(void);
 struct cpu*     mycpu(void);
 struct proc*    myproc();

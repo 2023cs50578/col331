@@ -8,3 +8,5 @@
 #define SYS_getpid  7
 #define SYS_mknod   8
 #define SYS_fork    9
+#define SYS_wait    10
+#define SYS_exit    11

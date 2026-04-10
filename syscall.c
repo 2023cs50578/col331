@@ -93,6 +93,8 @@ extern int sys_sleep(void);
 extern int sys_getpid(void);
 extern int sys_mknod(void);
 extern int sys_fork(void);
+extern int sys_wait(void);
+extern int sys_exit(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -104,6 +106,8 @@ static int (*syscalls[])(void) = {
 [SYS_getpid]  sys_getpid,
 [SYS_mknod]   sys_mknod,
 [SYS_fork]    sys_fork,
+[SYS_wait]    sys_wait,
+[SYS_exit]    sys_exit,
 };
 
 void
@@ -126,4 +130,17 @@ int
 sys_fork(void)
 {
   return fork();
+}
+
+int
+sys_wait(void)
+{
+  return wait();
+}
+
+int
+sys_exit(void)
+{
+  exit();
+  return 0;  // Not reached
 }

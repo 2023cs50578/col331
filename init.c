@@ -15,17 +15,21 @@ main(void)
     fd = open("console", O_RDWR);
   }
 
-  printf(fd, "Hello COL331 from init.c!\n");
+  printf(fd, "Testing fork, wait, and exit!\n");
 
   int pid = fork();
   
   if(pid < 0){
     printf(fd, "Fork failed!\n");
   } else if(pid == 0){
-    printf(fd, "I am the child process!\n");
-    for(;;); // Keep child alive
+    printf(fd, "Child executing, will now exit...\n");
+    exit(); 
   } else {
-    printf(fd, "I am the parent, my child's PID is %d\n", pid);
-    for(;;); // Keep parent alive
+    printf(fd, "Parent waiting for child...\n");
+    int reaped_pid = wait();
+    printf(fd, "Parent reaped child PID %d. Test successful!\n", reaped_pid);
+    for(;;); // Keep parent alive so OS doesn't panic
   }
+  
+  return 0;
 }
