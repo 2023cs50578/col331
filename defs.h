@@ -114,6 +114,7 @@ void            yield(void);
 void            forkret(void);
 void            sleep(void*);
 void            wakeup(void*);
+int             growproc(int);
 
 // sleeplock.c
 void            acquiresleep(struct sleeplock*);

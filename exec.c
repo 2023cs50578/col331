@@ -17,6 +17,7 @@ exec(char *path, char **argv)
   struct inode *ip;
   struct proc *curproc = myproc();
   struct proghdr ph;
+  uint sz = 0;
   char *offset;
   uint usp, ustack[3*MAXARG + 1];
 
@@ -55,10 +56,12 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
-    if(ph.vaddr + ph.filesz > PGSIZE)
+    if(ph.vaddr + ph.memsz > PGSIZE - KSTACKSIZE)
       goto bad;
     if(readi(ip, (char*)(offset + ph.vaddr), ph.off, ph.filesz) != ph.filesz)
       goto bad;
+    if(ph.vaddr + ph.memsz > sz)
+      sz = ph.vaddr + ph.memsz;
   }
   iunlockput(ip);
   end_op();
@@ -71,7 +74,7 @@ exec(char *path, char **argv)
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
   // Push argument strings, prepare rest of stack in ustack.
-  usp = PGSIZE;
+  usp = PGSIZE - KSTACKSIZE;
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
@@ -96,6 +99,7 @@ exec(char *path, char **argv)
   // writes 1s to the entire PGSIZE. All the return addresses etc will get
   // messed up, otherwise!
   kfree(curproc->offset);
+  curproc->sz = sz;
   curproc->offset = offset;
   switchuvm(curproc);
   return 0;

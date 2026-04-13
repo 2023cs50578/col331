@@ -126,7 +126,7 @@ vectors.S: vectors.pl
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
-ULIB = usys.o printf.o
+ULIB = usys.o printf.o ulib.o umalloc.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -138,7 +138,7 @@ UPROGS=\
 	_sh\
 	_echo\
 	_cat\
-	_ls
+	_ls\
 
 mkfs: mkfs.c fs.h
 	gcc -Werror -Wall -o mkfs mkfs.c

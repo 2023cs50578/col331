@@ -19,7 +19,7 @@ fetchint(uint addr, int *ip)
 {
   struct proc *curproc = myproc();
 
-  if(addr >= curproc->sz || addr+4 > curproc->sz) {
+  if(addr >= PGSIZE - KSTACKSIZE || addr+4 > PGSIZE - KSTACKSIZE) {
     return -1;
   }
   *ip = *(int*)(addr + curproc->offset);
@@ -35,10 +35,10 @@ fetchstr(uint addr, char **pp)
   char *s, *ep;
   struct proc *curproc = myproc();
 
-  if(addr >= curproc->sz)
+  if(addr >= PGSIZE - KSTACKSIZE)
     return -1;
   *pp = (char*)(addr + curproc->offset);
-  ep = (char*)(curproc->sz + curproc->offset);
+  ep = (char*)(PGSIZE - KSTACKSIZE + curproc->offset);
   for(s = *pp; s < ep; s++){
     if(*s == 0)
       return s - *pp;
@@ -64,7 +64,7 @@ argptr(int n, char **pp, int size)
 
   if(argint(n, &i) < 0)
     return -1;
-  if((uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+  if((uint)i >= PGSIZE - KSTACKSIZE || (uint)i+size > PGSIZE - KSTACKSIZE)
     return -1;
     
   // You must add curproc->offset here so it reads the correct memory!
@@ -101,6 +101,7 @@ extern int sys_kill(void);
 extern int sys_read(void);
 extern int sys_pipe(void);
 extern int sys_dup(void);
+extern int sys_sbrk(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -118,6 +119,7 @@ static int (*syscalls[])(void) = {
 [SYS_read]    sys_read,
 [SYS_pipe]    sys_pipe,
 [SYS_dup]     sys_dup,
+[SYS_sbrk]    sys_sbrk,
 };
 
 void

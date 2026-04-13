@@ -66,7 +66,7 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  p->sz = PGSIZE;
+  p->sz = 0;
 
   // kstack lives on a different segment
   if((p->kstack = kalloc()) == 0){
@@ -111,6 +111,7 @@ pinit(void)
   initproc = p;
 
   memmove(p->offset, _binary_initcode_start, (int)_binary_initcode_size);
+  p->sz = (uint)_binary_initcode_size;
   memset(p->tf, 0, sizeof(*p->tf));
 
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
@@ -119,7 +120,7 @@ pinit(void)
   p->tf->ss = p->tf->ds;
 
   p->tf->eflags = FL_IF;
-  p->tf->esp = PGSIZE;
+  p->tf->esp = PGSIZE - KSTACKSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
@@ -209,7 +210,7 @@ fork(void)
   // 2. Copy the entire user memory segment
   // In p23's segmentation model, the physical memory starts at np->offset
   // and the size of the user space is curproc->sz
-  memmove(np->offset, curproc->offset, curproc->sz);
+  memmove(np->offset, curproc->offset, PGSIZE - KSTACKSIZE);
 
   // 3. Copy the trap frame so the child has the exact same register states
   *np->tf = *curproc->tf;
@@ -446,4 +447,23 @@ procdump(void)
     cprintf("\n");
   }
   popcli();
+}
+
+int
+growproc(int n)
+{
+  struct proc *p = myproc();
+  int newsz;
+
+  newsz = (int)p->sz + n;
+  if(newsz < 0)
+    return -1;
+  if(newsz >= PGSIZE - KSTACKSIZE)
+    return -1;
+
+  if(n > 0)
+    memset(p->offset + p->sz, 0, n);
+
+  p->sz = newsz;
+  return 0;
 }

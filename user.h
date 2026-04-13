@@ -12,7 +12,10 @@ int fork(void);
 int wait(void);
 int exit(void) __attribute__((noreturn));
 int kill(int);
+char* sbrk(int);
 int pipe(int*);
+void* malloc(uint);
+void free(void*);
 int dup(int);
 
 // ulib.c

@@ -14,3 +14,4 @@
 #define SYS_read    13
 #define SYS_pipe    14
 #define SYS_dup     15
+#define SYS_sbrk    16
