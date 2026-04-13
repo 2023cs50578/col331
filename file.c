@@ -71,6 +71,8 @@ fileclose(struct file *f)
     begin_op();
     iput(ff.ip);
     end_op();
+  } else if(ff.type == FD_PIPE){
+    pipeclose(ff.pipe, ff.writable); // ADDED THIS
   }
 }
 
@@ -95,6 +97,9 @@ fileread(struct file *f, char *addr, int n)
 
   if(f->readable == 0)
     return -1;
+
+  if(f->type == FD_PIPE)
+    return piperead(f->pipe, addr, n);
   if(f->type == FD_INODE){
     ilock(f->ip);
     if((r = readi(f->ip, addr, f->off, n)) > 0)
@@ -113,6 +118,8 @@ filewrite(struct file *f, char *addr, int n)
 
   if(f->writable == 0)
     return -1;
+  if(f->type == FD_PIPE)
+    return pipewrite(f->pipe, addr, n);
   if(f->type == FD_INODE){
     // write a few blocks at a time
     int max = ((MAXOPBLOCKS-1-1-2) / 2) * 512;

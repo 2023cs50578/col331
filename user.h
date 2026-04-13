@@ -12,6 +12,8 @@ int fork(void);
 int wait(void);
 int exit(void) __attribute__((noreturn));
 int kill(int);
+int pipe(int*);
+int dup(int);
 
 // ulib.c
 void printf(int, const char*, ...);

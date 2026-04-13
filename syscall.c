@@ -99,6 +99,8 @@ extern int sys_wait(void);
 extern int sys_exit(void);
 extern int sys_kill(void);
 extern int sys_read(void);
+extern int sys_pipe(void);
+extern int sys_dup(void);
 
 static int (*syscalls[])(void) = {
 [SYS_open]    sys_open,
@@ -114,6 +116,8 @@ static int (*syscalls[])(void) = {
 [SYS_exit]    sys_exit,
 [SYS_kill]    sys_kill,
 [SYS_read]    sys_read,
+[SYS_pipe]    sys_pipe,
+[SYS_dup]     sys_dup,
 };
 
 void
