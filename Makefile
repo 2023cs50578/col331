@@ -134,13 +134,16 @@ _%: %.o $(ULIB)
 
 UPROGS=\
 	_init\
-	_sh
+	_sh\
+	_echo\
+	_cat\
+	_ls
 
 mkfs: mkfs.c fs.h
 	gcc -Werror -Wall -o mkfs mkfs.c
 
 fs.img: mkfs $(UPROGS)
-	./mkfs fs.img $(UPROGS)
+	./mkfs fs.img welcome.txt $(UPROGS)
 
 -include *.d
 
