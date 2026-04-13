@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "x86.h"
 #include "fs.h"
+#include "traps.h"
 #include "file.h"
 
 static int panicked = 0;
