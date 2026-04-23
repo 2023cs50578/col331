@@ -43,12 +43,10 @@ switchuvm(struct proc *p)
     panic("switchuvm: no process");
   if(p->kstack == 0)
     panic("switchuvm: no kstack");
+  if(p->pgdir == 0)
+    panic("switchuvm: no pgdir");
 
   pushcli();
-  mycpu()->gdt[SEG_UCODE] = SEG(STA_X|STA_R, p->offset, PROCSIZE << 12, DPL_USER);
-  mycpu()->gdt[SEG_UDATA] = SEG(STA_W, p->offset, PROCSIZE << 12, DPL_USER);
-  lgdt(mycpu()->gdt, sizeof(mycpu()->gdt));
-
   mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->ts,
                                 sizeof(mycpu()->ts)-1, 0);
   mycpu()->gdt[SEG_TSS].s = 0;
@@ -57,7 +55,17 @@ switchuvm(struct proc *p)
   // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
   // forbids I/O instructions (e.g., inb and outb) from user space
   mycpu()->ts.iomb = (ushort) 0xFFFF;
+
+  // Flat 0-base / 4GB-limit user segments. All isolation now flows
+  // through the MMU via p->pgdir, not segment base.
+  mycpu()->gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
+  mycpu()->gdt[SEG_UDATA] = SEG(STA_W,       0, 0xffffffff, DPL_USER);
+  lgdt(mycpu()->gdt, sizeof(mycpu()->gdt));
+
   ltr(SEG_TSS << 3);
+
+  // Switch h/w page table register to the process's page table.
+  lcr3(V2P(p->pgdir));
   popcli();
 }
 
@@ -186,10 +194,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *mem;
   uint a;
 
-  // TEMPORARY: KERNBASE is 0 on this branch while the kernel is still
-  // mapped at 0 in the segmentation model. Use PHYSTOP as the ceiling so
-  // the shadow page directories can actually grow.
-  if(newsz >= PHYSTOP)
+  if(newsz >= KERNBASE)
     return 0;
   if(newsz < oldsz)
     return oldsz;
@@ -331,4 +336,44 @@ clearpteu(pde_t *pgdir, char *uva)
   if(pte == 0)
     panic("clearpteu");
   *pte &= ~PTE_U;
+}
+
+// Map user virtual address to kernel address.
+char*
+uva2ka(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if((*pte & PTE_P) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+  return (char*)P2V(PTE_ADDR(*pte));
+}
+
+// Copy len bytes from p to user address va in page table pgdir.
+// Most useful when pgdir is not the current page table.
+// uva2ka ensures this only works for PTE_U pages.
+int
+copyout(pde_t *pgdir, uint va, void *p, uint len)
+{
+  char *buf, *pa0;
+  uint n, va0;
+
+  buf = (char*)p;
+  while(len > 0){
+    va0 = (uint)PGROUNDDOWN(va);
+    pa0 = uva2ka(pgdir, (char*)va0);
+    if(pa0 == 0)
+      return -1;
+    n = PGSIZE - (va - va0);
+    if(n > len)
+      n = len;
+    memmove(pa0 + (va - va0), buf, n);
+    len -= n;
+    buf += n;
+    va = va0 + PGSIZE;
+  }
+  return 0;
 }
