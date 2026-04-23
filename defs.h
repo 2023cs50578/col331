@@ -6,6 +6,7 @@ struct stat;
 struct context;
 struct proc;
 struct sleeplock;
+struct spinlock;
 struct pipe;
 
 // bio.c
@@ -124,6 +125,10 @@ int             holdingsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
 
 // spinlock.c
+void            acquire(struct spinlock*);
+void            release(struct spinlock*);
+int             holding(struct spinlock*);
+void            initlock(struct spinlock*, char*);
 void            getcallerpcs(void*, uint*);
 void            pushcli(void);
 void            popcli(void);
