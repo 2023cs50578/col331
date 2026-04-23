@@ -7,12 +7,6 @@
 #include "x86.h"
 #include "elf.h"
 
-// mmu.h's PGSIZE is 1MB (segmentation process-slot size on this variant).
-// exec's ELF loading, stack allocation, and PGROUNDUP all need to use
-// the hardware 4KB page size for paging to work correctly.
-#undef PGSIZE
-#define PGSIZE 4096
-
 int
 exec(char *path, char **argv)
 {

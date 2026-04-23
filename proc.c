@@ -114,10 +114,10 @@ pinit(void)
   initproc = p;
 
   memmove(p->offset, _binary_initcode_start, (int)_binary_initcode_size);
-  // p->sz is the size of the user address space, not just the initcode bytes.
-  // The stack sits at the top of the single page inituvm mapped, so syscall
-  // arg-validation (argint/argptr) must accept addresses up to 4096.
-  p->sz = 4096;
+  // p->sz is the size of the user address space, not just the initcode
+  // bytes. inituvm mapped one page at virt 0, so argint/argptr must accept
+  // user addresses up to PGSIZE (the stack lives at the top of this page).
+  p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
 
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
@@ -126,10 +126,8 @@ pinit(void)
   p->tf->ss = p->tf->ds;
 
   p->tf->eflags = FL_IF;
-  // User stack sits at the top of the single page inituvm mapped at virt 0.
-  // Hardcoded to 4096 because mmu.h's PGSIZE here is 1MB (segmentation).
-  p->tf->esp = 4096;
-  p->tf->eip = 0;  // beginning of initcode.S
+  p->tf->esp = PGSIZE;   // stack sits at top of the single inituvm'd page
+  p->tf->eip = 0;        // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   // cwd is set in forkret, after iinit has initialized the inode cache.
@@ -470,21 +468,23 @@ procdump(void)
   popcli();
 }
 
+// Grow current process's memory by n bytes.
+// Return 0 on success, -1 on failure.
 int
 growproc(int n)
 {
-  struct proc *p = myproc();
-  int newsz;
+  uint sz;
+  struct proc *curproc = myproc();
 
-  newsz = (int)p->sz + n;
-  if(newsz < 0)
-    return -1;
-  if(newsz >= PGSIZE - KSTACKSIZE)
-    return -1;
-
-  if(n > 0)
-    memset(p->offset + p->sz, 0, n);
-
-  p->sz = newsz;
+  sz = curproc->sz;
+  if(n > 0){
+    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      return -1;
+  } else if(n < 0){
+    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      return -1;
+  }
+  curproc->sz = sz;
+  switchuvm(curproc);  // reload CR3 to flush stale TLB entries
   return 0;
 }

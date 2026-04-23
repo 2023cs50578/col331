@@ -8,14 +8,6 @@
 #include "x86.h"
 #include "elf.h"
 
-// x86 hardware page tables are 4KB-granular. The rest of this branch still
-// uses the 1MB segmentation PGSIZE (see mmu.h) for process layout and kalloc,
-// so override PGSIZE locally here for the page-table math. kalloc still
-// returns 1MB chunks; we only use the first 4KB of each as a page
-// directory / page table, which is wasteful but structurally correct.
-#undef PGSIZE
-#define PGSIZE 4096
-
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;       // for use in scheduler()
 

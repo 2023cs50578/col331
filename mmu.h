@@ -65,7 +65,7 @@ struct segdesc {
 #define STS_IG32    0xE     // 32-bit Interrupt Gate
 #define STS_TG32    0xF     // 32-bit Trap Gate
 
-#define PGSIZE          (PROCSIZE << 12)    // bytes mapped by a page. This is kept same as PROCSIZE so that the process can be contiguously allocated.
+#define PGSIZE          4096                // bytes mapped by a page
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 
